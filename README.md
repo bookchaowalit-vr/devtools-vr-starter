@@ -21,6 +21,12 @@ features yet.
 GitHub Actions runs the starter contract check on pushes and pull requests.
 The workflow verifies that the required baseline files remain present.
 
+The shared security workflow from
+[`bookchaowalit/platform-ci-workflows`](https://github.com/bookchaowalit/platform-ci-workflows)
+(v1.1.1: gitleaks, Semgrep, OSV-Scanner, Trivy) runs in the same CI. The shared
+language CIs (`ci-node.yml`, `ci-python.yml`) are added with the first product
+scaffold, once there is a stack to lint, type check and test.
+
 ## Local development
 
 There is no runtime or dependency setup yet. Add implementation only when a
