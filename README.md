@@ -36,6 +36,21 @@ product is approved.
 | `e2e/smoke.spec.ts` | Playwright smoke: inline preview, and enter/exit an emulated Quest 3 session. |
 | `DESIGN.md` | 2D shell tokens (ADR-0007) and immersive comfort rules. |
 
+## Live
+
+Production: <https://devtools-vr-starter.vercel.app/> (Vercel project
+`devtools-vr-starter`, scope `chaowalit-greepokes-projects`). Open it in the
+Quest Browser and press **Enter VR**; on desktop it shows the inline preview,
+and `?emulate=quest3` runs the emulated headset.
+
+The project is not Git-connected: deploy with
+`vercel deploy --prod --scope chaowalit-greepokes-projects` from a clean
+`main` after CI is green and the UI review sign-off is recorded. The team is
+on the free plan (100 deployments per rolling 24 h, shared), so count recent
+deployments first. Rollback: `vercel promote <previous deployment URL>`.
+`.vercelignore` keeps `.env*` (where `vercel link` writes an OIDC token) out
+of uploads.
+
 ## Local development
 
 Requires Node.js 22+.

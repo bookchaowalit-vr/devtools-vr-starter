@@ -1,0 +1,7 @@
+# Never upload local env files (vercel link writes an OIDC token to .env.local)
+.env*
+node_modules
+dist
+test-results
+playwright-report
+coverage
