@@ -10,22 +10,38 @@ permissions:
   contents: read
 
 jobs:
-  starter-contract:
-    runs-on: ubuntu-latest
+  # Install, typecheck, Vitest unit tests (required, ADR-0004) and the production build.
+  web:
+    uses: bookchaowalit/platform-ci-workflows/.github/workflows/ci-node.yml@df695c12bdc6822587877d5fe55d3af31d5f66db # v1.5.11
+    with:
+      node-version: "22"
+      require-tests: true
+      build-command: npm run build
+
+  # No headset in CI (ADR-0012 D-6): smoke-test the production build in headless
+  # Chromium, inline and with the emulated Quest 3 runtime (IWER).
+  xr-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run test:e2e
+        env:
+          CI: "1"
+      - if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
 
-      - name: Verify starter contract
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -s README.md
-          test -s LICENSE
-          test -s .github/workflows/ci.yml
-
-  # Shared security scan (gitleaks, Semgrep, OSV-Scanner, Trivy) from platform-ci-workflows.
-  # The language CIs (ci-node.yml / ci-python.yml) do not fit yet: this starter has no stack,
-  # so the starter contract above stays the build check until a product scaffold lands.
+  # Shared security scan (gitleaks, Semgrep, OSV-Scanner, Trivy).
   security:
-    uses: bookchaowalit/platform-ci-workflows/.github/workflows/security.yml@87dc5e1c7e0416886a6371d5a101bb2ccba38edd # v1.1.1
+    uses: bookchaowalit/platform-ci-workflows/.github/workflows/security.yml@df695c12bdc6822587877d5fe55d3af31d5f66db # v1.5.11

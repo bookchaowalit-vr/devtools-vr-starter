@@ -1,36 +1,86 @@
-# bookchaowalit-vr-starter
+# devtools-vr-starter
 
-Starter repository for the `bookchaowalit-vr` organization.
+Reference WebXR scene for the `bookchaowalit-vr` organisation, built on the
+default stack from
+[ADR-0012](https://github.com/bookchaowalit/architecture-docs/blob/main/docs/architecture/decisions/ADR-0012-vr-xr-stack-webxr-first.md) (private architecture-docs repository):
+TypeScript + three.js + Vite, static deploy, emulated-XR smoke test in CI.
+Start every new VR app from this repository.
 
-## Purpose
+## What the scene shows
 
-This repository is an intentionally thin baseline for VR/XR interfaces
-and shared conventions under the Book Dev owner model. It contains no product
-features yet.
+- A floor, a pedestal and one cube you can grab (trigger on the cube)
+- Teleport (trigger on the floor) with a target marker and a short fade
+- Snap turn (thumbstick left/right, 45°), one turn per push
+- An inline 3D preview with mouse/touch orbit when there is no headset
+- An Enter VR button that says why VR is unavailable (no WebXR, no HTTPS, no headset)
+
+It contains no product features. Create a product repo from it once a VR
+product is approved.
 
 ## Repository boundary
 
 - **Owner:** `bookchaowalit-vr`
-- **Surface:** VR/XR
+- **Surface:** VR/XR (WebXR)
 - **Book Dev category:** `book-apps/vr`
 - **Default branch:** `main`
-- **Status:** starter / skeleton
+- **Status:** starter / reference scene
 
-## CI
+## Layout
 
-GitHub Actions runs the starter contract check on pushes and pull requests.
-The workflow verifies that the required baseline files remain present.
-
-The shared security workflow from
-[`bookchaowalit/platform-ci-workflows`](https://github.com/bookchaowalit/platform-ci-workflows)
-(v1.1.1: gitleaks, Semgrep, OSV-Scanner, Trivy) runs in the same CI. The shared
-language CIs (`ci-node.yml`, `ci-python.yml`) are added with the first product
-scaffold, once there is a stack to lint, type check and test.
+| Path | What it holds |
+|---|---|
+| `src/comfort.ts` | Comfort and locomotion rules: snap turn, teleport validity, vignette, seated offset. Plain functions with unit tests. |
+| `src/xr-support.ts` | WebXR availability, button labels, `?emulate=` parsing. Unit-tested. |
+| `src/scene.ts` | three.js glue: renderer, rig, controllers, grab, teleport, fade. Kept thin. |
+| `src/main.ts` | Boot, emulator opt-in, Enter/Exit VR session handling. |
+| `e2e/smoke.spec.ts` | Playwright smoke: inline preview, and enter/exit an emulated Quest 3 session. |
+| `DESIGN.md` | 2D shell tokens (ADR-0007) and immersive comfort rules. |
 
 ## Local development
 
-There is no runtime or dependency setup yet. Add implementation only when a
-concrete VR/XR product is approved.
+Requires Node.js 22+.
+
+```bash
+npm ci
+npm run dev          # http://localhost:5173
+npm test             # Vitest unit tests
+npm run typecheck
+npm run build && npm run test:e2e   # Playwright smoke against the production build
+```
+
+Open `http://localhost:5173/?emulate=quest3` (or `quest2`) to run with the
+emulated headset (IWER) in a desktop browser. To try it on a Quest, serve over
+HTTPS (WebXR needs a secure context): use the deployed URL, or
+`npx vite --host` with an HTTPS tunnel.
+
+On WSL without Chromium system libraries, run the smoke test in the
+Playwright image:
+
+```bash
+docker run --rm --ipc=host -v "$PWD":/work -w /work -e CI=1 mcr.microsoft.com/playwright:v1.64.1-noble npx playwright test
+```
+
+## CI
+
+GitHub Actions on every push and pull request to `main`:
+
+- `web` — shared `ci-node.yml` (platform-ci-workflows v1.5.11): install,
+  typecheck, unit tests (required), production build
+- `xr-smoke` — Playwright in headless Chromium against the production build,
+  inline and with the emulated Quest 3
+- `security` — shared security workflow: gitleaks, Semgrep, OSV-Scanner, Trivy
+
+CI cannot run a real headset. Before a release, record a run on the floor
+device (Quest 2) in the XR technical design and the comfort playtest record.
+
+## Role templates
+
+ADR-0012 and the templates live in the private `bookchaowalit/architecture-docs`
+repository; the links below work for organisation members.
+
+- VR Engineer: [`xr-technical-design.md`](https://github.com/bookchaowalit/architecture-docs/blob/main/templates/positions/vr-engineer/xr-technical-design.md)
+- VR Developer: [`xr-interaction-and-comfort-test.md`](https://github.com/bookchaowalit/architecture-docs/blob/main/templates/positions/vr-developer/xr-interaction-and-comfort-test.md)
+- Skill: `xr-engineering` in `bookchaowalit/platform-agent-skills`
 
 ## License
 
