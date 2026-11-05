@@ -121,7 +121,10 @@ export function createScene(container: HTMLElement): StarterScene {
 
     controller.addEventListener("selectstart", () => {
       // Only one hand holds the cube at a time; the other hand keeps teleporting.
-      if (holder === null && castFrom(controller, [cube])) grab(controller);
+      // The cube must be the first thing the ray meets, so it cannot be grabbed through the pedestal.
+      if (holder === null && controller.visible && castFrom(controller, [floor, pedestal, cube])?.object === cube) {
+        grab(controller);
+      }
     });
     // selectend also fires when the action is cancelled (tracking lost, input removed),
     // so it only releases the cube; a teleport needs a completed select.
@@ -129,7 +132,7 @@ export function createScene(container: HTMLElement): StarterScene {
       if (holder === controller) release();
     });
     controller.addEventListener("select", () => {
-      if (holder === controller) return;
+      if (holder === controller || !controller.visible) return;
       const target = teleportTarget(controller);
       if (target) teleportTo(target);
     });
@@ -210,7 +213,8 @@ export function createScene(container: HTMLElement): StarterScene {
       }
       for (const controller of controllers) {
         const marker = controller.userData.marker as THREE.Mesh;
-        const point = holder === controller ? null : teleportTarget(controller);
+        // three.js hides a controller that lost tracking; its last pose must not drive the marker.
+        const point = holder === controller || !controller.visible ? null : teleportTarget(controller);
         marker.visible = point !== null;
         if (point) marker.position.copy(point);
       }
