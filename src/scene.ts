@@ -141,8 +141,9 @@ export function createScene(container: HTMLElement): StarterScene {
   }
 
   function teleportTarget(controller: THREE.Object3D) {
-    const hit = castFrom(controller, [floor]);
-    if (!hit?.face) return null;
+    // Cast against everything solid: a ray that meets the pedestal or cube first must not land on the floor behind it.
+    const hit = castFrom(controller, [floor, pedestal, cube]);
+    if (!hit?.face || hit.object !== floor) return null;
     camera.getWorldPosition(headWorld);
     const normalY = hit.face.normal.clone().transformDirection(floor.matrixWorld).y;
     const target = { x: hit.point.x, y: hit.point.y, z: hit.point.z, normalY };

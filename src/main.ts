@@ -37,17 +37,21 @@ async function start() {
     availability === "supported" ? "Headset ready." : "Showing the 3D preview. Drag to look around.";
 
   let session: XRSession | null = null;
+  let starting = false;
   vrButton.addEventListener("click", async () => {
     if (session) {
       await session.end();
       return;
     }
+    if (starting) return;
+    starting = true;
+    let next: XRSession | null = null;
     try {
-      const next = await navigator.xr!.requestSession("immersive-vr", {
+      next = await navigator.xr!.requestSession("immersive-vr", {
         optionalFeatures: ["local-floor", "bounded-floor", "hand-tracking"],
       });
-      session = next;
       await starter.renderer.xr.setSession(next);
+      session = next;
       root.dataset.xr = "immersive";
       vrButton.textContent = "Exit VR";
       (status as HTMLElement).textContent = "In VR. Point at the floor and press the trigger to teleport.";
@@ -58,7 +62,12 @@ async function start() {
         (status as HTMLElement).textContent = "Headset ready.";
       });
     } catch (error) {
+      // The runtime granted a session but the renderer could not take it: end it so the headset is released.
+      if (next) await next.end().catch(() => undefined);
+      session = null;
       (status as HTMLElement).textContent = `Could not start VR: ${(error as Error).message}`;
+    } finally {
+      starting = false;
     }
   });
 }
