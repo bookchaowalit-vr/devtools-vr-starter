@@ -71,12 +71,9 @@ export function createScene(container: HTMLElement): StarterScene {
   cube.name = "grabbable";
   scene.add(cube);
 
-  const marker = new THREE.Mesh(
-    new THREE.RingGeometry(0.18, 0.24, 32).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: 0x7fd1ff }),
-  );
-  marker.visible = false;
-  scene.add(marker);
+  // One teleport marker per controller, so each hand shows where it points.
+  const markerGeometry = new THREE.RingGeometry(0.18, 0.24, 32).rotateX(-Math.PI / 2);
+  const markerMaterial = new THREE.MeshBasicMaterial({ color: 0x7fd1ff });
 
   // Fade sphere for teleports and session changes: no hard cuts (comfort rule).
   const fade = new THREE.Mesh(
@@ -92,6 +89,20 @@ export function createScene(container: HTMLElement): StarterScene {
   const raycaster = new THREE.Raycaster();
   const tempMatrix = new THREE.Matrix4();
   const headWorld = new THREE.Vector3();
+  const controllers: THREE.XRTargetRaySpace[] = [];
+  let holder: THREE.Object3D | null = null;
+
+  function grab(controller: THREE.Object3D) {
+    controller.attach(cube);
+    (cube.material as THREE.MeshStandardMaterial).emissive.setHex(0x332200);
+    holder = controller;
+  }
+
+  function release() {
+    scene.attach(cube);
+    (cube.material as THREE.MeshStandardMaterial).emissive.setHex(0x000000);
+    holder = null;
+  }
 
   for (const index of [0, 1]) {
     const controller = renderer.xr.getController(index);
@@ -102,20 +113,19 @@ export function createScene(container: HTMLElement): StarterScene {
     ray.scale.z = 4;
     controller.add(ray);
     rig.add(controller);
+    controllers.push(controller);
+    const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+    marker.visible = false;
+    scene.add(marker);
+    controller.userData.marker = marker;
 
     controller.addEventListener("selectstart", () => {
-      const hit = castFrom(controller, [cube]);
-      if (hit) {
-        controller.attach(cube);
-        (cube.material as THREE.MeshStandardMaterial).emissive.setHex(0x332200);
-        controller.userData.holding = true;
-      }
+      // Only one hand holds the cube at a time; the other hand keeps teleporting.
+      if (holder === null && castFrom(controller, [cube])) grab(controller);
     });
     controller.addEventListener("selectend", () => {
-      if (controller.userData.holding) {
-        scene.attach(cube);
-        (cube.material as THREE.MeshStandardMaterial).emissive.setHex(0x000000);
-        controller.userData.holding = false;
+      if (holder === controller) {
+        release();
         return;
       }
       const target = teleportTarget(controller);
@@ -166,6 +176,9 @@ export function createScene(container: HTMLElement): StarterScene {
     fadeUntil = performance.now() + FADE_MS;
   });
   renderer.xr.addEventListener("sessionend", () => {
+    // A cube held when the session ends would stay attached to a controller that no longer moves.
+    if (holder) release();
+    for (const controller of controllers) controller.userData.marker.visible = false;
     rig.position.set(0, 0, 0);
     rig.rotation.set(0, 0, 0);
     camera.position.set(0, EYE_HEIGHT_INLINE, 2.5);
@@ -182,7 +195,6 @@ export function createScene(container: HTMLElement): StarterScene {
 
   renderer.setAnimationLoop(() => {
     const session = renderer.xr.getSession();
-    marker.visible = false;
     if (session) {
       for (const source of session.inputSources) {
         const axes = source.gamepad?.axes;
@@ -191,14 +203,11 @@ export function createScene(container: HTMLElement): StarterScene {
         turnState.set(source, result.state);
         if (result.deltaYaw !== 0) turnRig(result.deltaYaw);
       }
-      for (const index of [0, 1]) {
-        const controller = renderer.xr.getController(index);
-        if (controller.userData.holding) continue;
-        const point = teleportTarget(controller);
-        if (point) {
-          marker.position.copy(point);
-          marker.visible = true;
-        }
+      for (const controller of controllers) {
+        const marker = controller.userData.marker as THREE.Mesh;
+        const point = holder === controller ? null : teleportTarget(controller);
+        marker.visible = point !== null;
+        if (point) marker.position.copy(point);
       }
     }
     const remaining = fadeUntil - performance.now();
