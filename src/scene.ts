@@ -123,17 +123,21 @@ export function createScene(container: HTMLElement): StarterScene {
       // Only one hand holds the cube at a time; the other hand keeps teleporting.
       if (holder === null && castFrom(controller, [cube])) grab(controller);
     });
+    // selectend also fires when the action is cancelled (tracking lost, input removed),
+    // so it only releases the cube; a teleport needs a completed select.
     controller.addEventListener("selectend", () => {
-      if (holder === controller) {
-        release();
-        return;
-      }
+      if (holder === controller) release();
+    });
+    controller.addEventListener("select", () => {
+      if (holder === controller) return;
       const target = teleportTarget(controller);
       if (target) teleportTo(target);
     });
   }
 
   function castFrom(controller: THREE.Object3D, objects: THREE.Object3D[]) {
+    // matrixWorld is only refreshed at render; input events and same-frame teleports/turns need the current pose.
+    rig.updateMatrixWorld(true);
     tempMatrix.identity().extractRotation(controller.matrixWorld);
     raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
     raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
