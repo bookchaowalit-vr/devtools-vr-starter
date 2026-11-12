@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="WebXR reference scene for bookchaowalit-vr: grab a cube, teleport, snap turn." />
     <title>VR Starter</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="VR Starter — WebXR reference scene" />
+    <meta property="og:description" content="WebXR reference scene for bookchaowalit-vr: grab a cube, teleport, snap turn." />
+    <meta property="og:url" content="https://devtools-vr-starter.vercel.app/" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
@@ -17,6 +21,11 @@
     <footer id="controls" class="bar controls">
       <button id="enter-vr" type="button" disabled>Checking for VR…</button>
       <p id="xr-status" class="status" role="status" aria-live="polite">Loading the scene…</p>
+      <nav class="site-links" aria-label="Site">
+        <a href="https://bookchaowalit.com/privacy">Privacy</a>
+        <a href="https://monitor.bookchaowalit.com/">Status</a>
+        <a href="mailto:bookchaowalit.work@gmail.com">Contact</a>
+      </nav>
     </footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
