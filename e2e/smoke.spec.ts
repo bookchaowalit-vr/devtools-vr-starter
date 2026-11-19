@@ -8,7 +8,22 @@ test("inline preview renders and explains why VR is unavailable", async ({ page 
   await expect(page.locator("html")).toHaveAttribute("data-xr", "inline");
   await expect(page.getByRole("button", { name: /VR not available|no WebXR/ })).toBeDisabled();
   await expect(page.getByRole("status")).toContainText("3D preview");
+  // With no headset there is still something to press, and it says it is emulated.
+  await expect(page.getByRole("link", { name: "Try emulator" })).toHaveAttribute("href", /emulate=quest3/);
+  await expect(page.getByRole("button", { name: "Copy Quest link" })).toBeEnabled();
   expect(errors).toEqual([]);
+});
+
+test("comfort settings persist across reloads", async ({ page }) => {
+  await page.goto("/");
+  await page.getByText("Comfort settings").click();
+  await page.getByLabel("90°").check();
+  await page.getByLabel(/Seated mode/).check();
+  await page.reload();
+  await page.getByText("Comfort settings").click();
+  await expect(page.getByLabel("90°")).toBeChecked();
+  await expect(page.getByLabel(/Seated mode/)).toBeChecked();
+  await expect(page.getByLabel(/Comfort vignette/)).toBeChecked();
 });
 
 test("emulated Quest 3 enters and exits an immersive session", async ({ page }) => {

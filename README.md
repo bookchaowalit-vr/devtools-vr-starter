@@ -11,8 +11,10 @@ Start every new VR app from this repository.
 - A floor, a pedestal and one cube you can grab (trigger on the cube)
 - Teleport (trigger on the floor) with a target marker and a short fade
 - Snap turn (thumbstick left/right, 45°), one turn per push
-- An inline 3D preview with mouse/touch orbit when there is no headset
-- An Enter VR button that says why VR is unavailable (no WebXR, no HTTPS, no headset)
+- An inline 3D preview with mouse/touch orbit and arrow keys when there is no headset
+- An Enter VR button that says why VR is unavailable (no WebXR, no HTTPS, no headset),
+  with "Try emulator" (`?emulate=quest3`) and "Copy Quest link" next to it
+- Comfort settings (snap angle 30/45/90°, vignette, seated) saved on the device
 
 It contains no product features. Create a product repo from it once a VR
 product is approved.
@@ -30,7 +32,9 @@ product is approved.
 | Path | What it holds |
 |---|---|
 | `src/comfort.ts` | Comfort and locomotion rules: snap turn, teleport validity, vignette, seated offset. Plain functions with unit tests. |
-| `src/xr-support.ts` | WebXR availability, button labels, `?emulate=` parsing. Unit-tested. |
+| `src/comfort-settings.ts` | Load/save the comfort choice in `localStorage` with safe fallbacks. Unit-tested. |
+| `src/xr-support.ts` | WebXR availability, button labels, error messages, `?emulate=` parsing. Unit-tested. |
+| `src/inline-keys.ts` | Arrow-key look-around for the inline preview. Unit-tested. |
 | `src/scene.ts` | three.js glue: renderer, rig, controllers, grab, teleport, fade. Kept thin. |
 | `src/main.ts` | Boot, emulator opt-in, Enter/Exit VR session handling. |
 | `e2e/smoke.spec.ts` | Playwright smoke: inline preview, and enter/exit an emulated Quest 3 session. |

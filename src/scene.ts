@@ -11,6 +11,7 @@ import {
   rigHeightOffset,
   snapTurn,
 } from "./comfort";
+import { keyRotation } from "./inline-keys";
 
 const PLAY_AREA: Bounds = { minX: -5, maxX: 5, minZ: -5, maxZ: 5 };
 const EYE_HEIGHT_INLINE = 1.6;
@@ -24,13 +25,18 @@ export interface StarterScene {
 export function createScene(container: HTMLElement): StarterScene {
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setSize(container.clientWidth, container.clientHeight, false);
   renderer.xr.enabled = true;
   renderer.xr.setReferenceSpaceType("local-floor");
   renderer.xr.setFoveation(1);
   container.appendChild(renderer.domElement);
-  renderer.domElement.setAttribute("aria-label", "3D scene: a floor with one cube you can grab");
+  renderer.domElement.setAttribute(
+    "aria-label",
+    "3D scene: a floor with one cube you can grab. Use the arrow keys to look around.",
+  );
   renderer.domElement.setAttribute("role", "img");
+  // Focusable so the inline preview can be turned with the keyboard, not only by dragging.
+  renderer.domElement.tabIndex = 0;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x10141c);
@@ -49,12 +55,24 @@ export function createScene(container: HTMLElement): StarterScene {
 
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(PLAY_AREA.maxX - PLAY_AREA.minX, PLAY_AREA.maxZ - PLAY_AREA.minZ),
-    new THREE.MeshStandardMaterial({ color: 0x2a3140, roughness: 1 }),
+    new THREE.MeshStandardMaterial({ color: 0x3a4660, roughness: 1 }),
   );
   floor.rotation.x = -Math.PI / 2;
   floor.name = "floor";
   scene.add(floor);
-  scene.add(new THREE.GridHelper(10, 10, 0x5b6b8c, 0x3a4458));
+  scene.add(new THREE.GridHelper(10, 10, 0x8091b4, 0x55627e));
+  // Outline the teleport area so its edge reads against the background in the 2D preview too.
+  const edgeY = 0.005;
+  const edge = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(PLAY_AREA.minX, edgeY, PLAY_AREA.minZ),
+      new THREE.Vector3(PLAY_AREA.maxX, edgeY, PLAY_AREA.minZ),
+      new THREE.Vector3(PLAY_AREA.maxX, edgeY, PLAY_AREA.maxZ),
+      new THREE.Vector3(PLAY_AREA.minX, edgeY, PLAY_AREA.maxZ),
+    ]),
+    new THREE.LineBasicMaterial({ color: 0x7fd1ff }),
+  );
+  scene.add(edge);
 
   const pedestal = new THREE.Mesh(
     new THREE.BoxGeometry(0.5, 0.9, 0.5),
@@ -175,6 +193,14 @@ export function createScene(container: HTMLElement): StarterScene {
   inlineControls.target.set(0, 1, 0);
   inlineControls.enableDamping = false;
   inlineControls.update();
+  renderer.domElement.addEventListener("keydown", (event) => {
+    const rotation = inlineControls.enabled ? keyRotation(event.key) : null;
+    if (!rotation) return;
+    event.preventDefault();
+    inlineControls.rotateLeft(rotation[0]);
+    inlineControls.rotateUp(rotation[1]);
+    inlineControls.update();
+  });
 
   renderer.xr.addEventListener("sessionstart", () => {
     camera.position.set(0, 0, 0);
@@ -195,11 +221,13 @@ export function createScene(container: HTMLElement): StarterScene {
     turnState.clear();
   });
 
-  window.addEventListener("resize", () => {
+  // The stage also changes size when the footer's <details> open, not only on window resize.
+  new ResizeObserver(() => {
+    if (renderer.xr.isPresenting || container.clientWidth === 0 || container.clientHeight === 0) return;
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-  });
+    renderer.setSize(container.clientWidth, container.clientHeight, false);
+  }).observe(container);
 
   renderer.setAnimationLoop(() => {
     const session = renderer.xr.getSession();

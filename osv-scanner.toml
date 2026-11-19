@@ -1,0 +1,9 @@
+# Reviewed OSV-Scanner exceptions. Each entry needs a reason and an expiry.
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2027-01-18T00:00:00Z
+reason = """picomatch <=4.0.7 ReDoS through single-branch repeated extglobs. No fixed release exists \
+(4.0.7 is the latest). Build and test tooling only: vite, vitest and tinyglobby, all matching glob \
+patterns from this repository's own config at build or test time, never request input, and not part \
+of the static runtime bundle (three + iwer). Re-check when picomatch ships a fix."""

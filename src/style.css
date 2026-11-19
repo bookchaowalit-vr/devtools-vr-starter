@@ -7,7 +7,11 @@
   --color-accent: #f2a541;
   --color-accent-text: #1a1206;
   --color-focus: #7fd1ff;
-  --font-sans: system-ui, "Noto Sans Thai", "Noto Sans", sans-serif;
+  --color-error: #ff8a80;
+  --color-accent-hover: #f6b862;
+  --color-accent-active: #e0932f;
+  /* English-only page: no Thai webfont is loaded, so none is listed (add a self-hosted one if Thai copy lands). */
+  --font-sans: system-ui, "Noto Sans", sans-serif;
   color-scheme: dark;
 }
 
@@ -17,15 +21,19 @@
   box-sizing: border-box;
 }
 
-html,
-body {
-  margin: 0;
+html {
   height: 100%;
 }
 
 body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  /* The scene fills the free height but never drops below 240 px; when the footer opens past that, the page scrolls. */
+  grid-template-rows: auto minmax(240px, 1fr) auto;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -43,21 +51,60 @@ h1 {
 }
 
 .lede {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
+  max-width: 70ch;
+  color: var(--color-muted);
+}
+
+details > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--color-text);
+  font-weight: 600;
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+details > summary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-block: 5px solid transparent;
+  border-inline-start: 7px solid currentColor;
+  transition: transform 150ms ease;
+}
+
+details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.how p {
+  margin: 0 0 4px;
   max-width: 70ch;
   color: var(--color-muted);
 }
 
 .stage {
   position: relative;
-  min-height: 240px;
   overflow: hidden;
 }
 
 .stage canvas {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.stage canvas:focus-visible {
+  outline-offset: -3px;
 }
 
 .controls {
@@ -80,6 +127,50 @@ button {
   cursor: pointer;
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+button:not(:disabled):hover {
+  background: var(--color-accent-hover);
+}
+
+button:not(:disabled):active {
+  background: var(--color-accent-active);
+}
+
+.secondary,
+button.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 2px solid var(--color-accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.secondary:hover,
+button.secondary:not(:disabled):hover {
+  background: rgba(242, 165, 65, 0.14);
+}
+
+.secondary:active,
+button.secondary:not(:disabled):active {
+  background: rgba(242, 165, 65, 0.24);
+}
+
+.secondary[hidden] {
+  display: none;
+}
+
 button:disabled {
   background: #3a4458;
   color: var(--color-text);
@@ -88,13 +179,74 @@ button:disabled {
 
 .status {
   margin: 0;
+  flex: 1 1 16rem;
   color: var(--color-muted);
+}
+
+.status[data-tone="error"] {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+.status[data-tone="error"]::before {
+  content: "⚠ ";
+  speak: never;
+}
+
+.comfort[open] {
+  flex-basis: 100%;
+}
+
+.comfort-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  align-items: center;
+  padding-bottom: 4px;
+}
+
+.comfort-form fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.comfort-form legend {
+  float: left;
+  margin-right: 12px;
+  padding: 10px 0;
+  color: var(--color-muted);
+}
+
+.comfort-form label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.comfort-form input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
 }
 
 .site-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
+  gap: 0 14px;
   margin-left: auto;
 }
 
@@ -113,15 +265,31 @@ button:disabled {
 .skip-link {
   position: absolute;
   left: 16px;
-  top: -48px;
-  padding: 8px 12px;
+  top: -60px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 8px;
   background: var(--color-accent);
   color: var(--color-accent-text);
+  font-weight: 600;
   z-index: 1;
 }
 
 .skip-link:focus {
   top: 8px;
+}
+
+@media (max-width: 599px) {
+  /* Narrow screens: actions share rows evenly so the 3D scene keeps more of the first screen. */
+  .actions > * {
+    flex: 1 1 auto;
+  }
+
+  .status {
+    font-size: 0.9375rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

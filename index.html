@@ -15,13 +15,36 @@
     <a class="skip-link" href="#controls">Skip to VR controls</a>
     <header class="bar">
       <h1>VR Starter</h1>
-      <p class="lede">A reference WebXR scene. In a headset: trigger on the cube to grab it, trigger on the floor to teleport, thumbstick left or right to snap turn.</p>
+      <p class="lede">A reference WebXR scene: grab, teleport and snap turn.</p>
+      <details class="how">
+        <summary>Headset controls</summary>
+        <p>Trigger on the cube to grab it, trigger on the floor to teleport, thumbstick left or right to snap turn.</p>
+      </details>
     </header>
     <main id="stage" class="stage"></main>
     <footer id="controls" class="bar controls">
-      <button id="enter-vr" type="button" disabled>Checking for VR…</button>
+      <div class="actions">
+        <button id="enter-vr" type="button" disabled>Checking for VR…</button>
+        <a id="try-emulator" class="secondary" href="/?emulate=quest3" title="Open this page with an emulated Quest 3 headset (no real VR)" hidden>Try emulator</a>
+        <button id="copy-link" class="secondary" type="button" hidden>Copy Quest link</button>
+      </div>
       <p id="xr-status" class="status" role="status" aria-live="polite">Loading the scene…</p>
+      <details class="comfort">
+        <summary>Comfort settings</summary>
+        <form id="comfort-form" class="comfort-form">
+          <fieldset>
+            <legend>Snap turn angle</legend>
+            <label><input type="radio" name="snapAngleDeg" value="30" /> 30°</label>
+            <label><input type="radio" name="snapAngleDeg" value="45" checked /> 45°</label>
+            <label><input type="radio" name="snapAngleDeg" value="90" /> 90°</label>
+          </fieldset>
+          <label><input type="checkbox" name="vignette" checked /> Comfort vignette while moving</label>
+          <label><input type="checkbox" name="seated" /> Seated mode (raises your eye line 40 cm)</label>
+          <p class="hint">Saved on this device and used the next time you press Enter VR.</p>
+        </form>
+      </details>
       <nav class="site-links" aria-label="Site">
+        <a href="https://bookchaowalit.com">bookchaowalit.com</a>
         <a href="https://bookchaowalit.com/privacy">Privacy</a>
         <a href="https://monitor.bookchaowalit.com/">Status</a>
         <a href="mailto:bookchaowalit.work@gmail.com">Contact</a>

@@ -17,6 +17,21 @@ describe('page metadata and footer links', () => {
     expect(html).toContain('href="mailto:bookchaowalit.work@gmail.com"');
   });
 
+  it('links back to the bookchaowalit.com hub', () => {
+    expect(html).toContain('<a href="https://bookchaowalit.com">bookchaowalit.com</a>');
+  });
+
+  it('offers an enabled action when there is no headset and a comfort form', () => {
+    expect(html).toContain('href="/?emulate=quest3"');
+    expect(html).toContain('id="copy-link"');
+    for (const name of ['snapAngleDeg', 'vignette', 'seated']) expect(html).toContain(`name="${name}"`);
+  });
+
+  it('does not list a font the page never loads', () => {
+    const css = readFileSync(new URL('./style.css', import.meta.url), 'utf8');
+    expect(css).not.toContain('Noto Sans Thai');
+  });
+
   it('ships robots.txt pointing at a sitemap that exists', () => {
     const robots = readFileSync(new URL('../public/robots.txt', import.meta.url), 'utf8');
     expect(robots).toContain('Sitemap: https://devtools-vr-starter.vercel.app/sitemap.xml');
