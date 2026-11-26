@@ -44,4 +44,4 @@ jobs:
 
   # Shared security scan (gitleaks, Semgrep, OSV-Scanner, Trivy).
   security:
-    uses: bookchaowalit/platform-ci-workflows/.github/workflows/security.yml@df695c12bdc6822587877d5fe55d3af31d5f66db # v1.5.11
+    uses: bookchaowalit/platform-ci-workflows/.github/workflows/security.yml@493a7f5c322219e61245cf17f1fa34de2c35a22b # v1.6.6
